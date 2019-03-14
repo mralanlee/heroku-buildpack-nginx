@@ -18,8 +18,10 @@ nginx_tarball_url=http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
 pcre_tarball_url=http://iweb.dl.sourceforge.net/project/pcre/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.bz2
 headers_more_nginx_module_url=https://github.com/openresty/headers-more-nginx-module/archive/v${HEADERS_MORE_VERSION}.tar.gz
 zlib_url=http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz
+ngx_pagespeed=https://ngxpagespeed.com/install
 
 temp_dir=$(mktemp -d /tmp/nginx.XXXXXXXXXX)
+
 
 echo "Serving files from /tmp on $PORT"
 cd /tmp
@@ -40,6 +42,7 @@ echo "Downloading $headers_more_nginx_module_url"
 echo "Downloading $zlib_url"
 (cd nginx-${NGINX_VERSION} && curl -L $zlib_url | tar xvz )
 
+
 (
   cd nginx-${NGINX_VERSION}
   ./configure \
@@ -51,7 +54,12 @@ echo "Downloading $zlib_url"
     --with-http_auth_jwt_module \
     --prefix=/tmp/nginx \
     --add-module=${temp_dir}/nginx-${NGINX_VERSION}/headers-more-nginx-module-${HEADERS_MORE_VERSION} \
+    --add-module=$HOME/$nps_dir ${PS_NGX_EXTRA_FLAGS}
   make install
 )
+
+echo "Downloading and installing ngx_pagespeed module"
+(bash <(curl -f -L -sS https://ngxpagespeed.com/install) \
+  --nginx-version 1.9.5)
 
 cp /tmp/nginx/sbin/nginx $1
